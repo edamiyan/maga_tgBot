@@ -6,7 +6,7 @@ from pdf_parser import check_new_students
 from pickle import load, dump
 from logger import logging
 
-token = '' # Токен
+token = ''
 bot = telebot.TeleBot(token)
 users = set ()  # Список пользователей, подписанных на уведомления
 faculty = 'ИУ7' # Название отслеживаемого факультета
@@ -38,13 +38,14 @@ class P_schedule():
     def check_students():
         with open('tmp/users', 'rb') as f:
             users = load(f)
-        new_students = check_new_students(faculty)
-        if new_students == '':
+        new_students, count = check_new_students(faculty)
+        if count == 0:
             logging.info("new students not found")
         else:
             logging.info("new students found")
             for i in users:
-                bot.send_message(i, 'Новые абитуриенты:\n'+new_students)
+                bot.send_message(i, 'Новые абитуриенты:\n')
+                bot.send_message(i, f'<pre>{new_students}</pre>', parse_mode="html") 
             logging.info("notifications have been sent out successfully")
 
 
@@ -114,14 +115,15 @@ def callback_inline(call):
         elif call.data == "list_reg":
             with open('tmp/students_faculty', 'rb') as f:
                 list_data = load(f)
-            bot.send_message(call.message.chat.id, list_data[0], reply_markup=keyboard) 
+            bot.send_message(call.message.chat.id, f'<pre>{list_data[0]}</pre>', parse_mode="html", reply_markup=keyboard) 
             logging.info("user [{}] printed registration list".format(call.message.chat.id))
 
         
         elif call.data == "count_reg":
             with open('tmp/students_faculty', 'rb') as f:
                 list_data = load(f)
-            bot.send_message(call.message.chat.id, "На направление {} зарегистрировано всего: {}\nНа платной основе: {}\nЦелевое обучение: {}\nНа бюджетной основе: {}".format(faculty, list_data[1],list_data[2], list_data[3], list_data[1] - list_data[2] - list_data[3]), reply_markup=keyboard)
+            bot.send_message(call.message.chat.id, "На направление {} зарегистрировано всего: {}\nНа платной основе: {}\nЦелевое обучение: {}\nНа бюджетной основе: {}".format(faculty, list_data[1],list_data[2], list_data[3], 
+            list_data[1] - list_data[2] - list_data[3]), reply_markup=keyboard)
             logging.info("user [{}] printed count".format(call.message.chat.id))
 
 
